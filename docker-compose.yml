@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  airflow-webserver:
+    image: apache/airflow:2.5.1
+    container_name: airflow-webserver
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEB_SERVER__ENABLE_PROXY_FIX=True
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./requirements.txt:/opt/airflow/requirements.txt
+    depends_on:
+      - db
+
+  airflow-scheduler:
+    image: apache/airflow:2.5.1
+    container_name: airflow-scheduler
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    depends_on:
+      - db
+    command: scheduler
+
+  db:
+    image: mysql:5.7
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: d@n1l0bs2003
+    volumes:
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - airflow-net
+
+networks:
+  airflow-net:
+    driver: bridge
